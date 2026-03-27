@@ -1,0 +1,412 @@
+<style>
+  #gv_container { font-family: 'Times New Roman', Times, serif; font-size: 14px; }
+  #gv_container .header-container { 
+      display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 5px; border-bottom: 2px solid #0d6efd; 
+      padding-bottom: 5px; background-color: #f8f9fa; padding: 10px; border-radius: 4px;
+  }
+  #gv_container .page-title { font-weight: bold; font-size: 20px; color: #dc3545; text-transform: uppercase; margin: 0; }
+  #gv_container .filter-group { display: flex; gap: 10px; align-items: center; }
+  #gv_container .form-select-lg-custom {
+      font-size: 16px; font-weight: bold; color: #0d6efd;
+      border: 1px solid #ced4da; padding: 4px 10px; border-radius: 4px; height: 34px;
+  }
+  #gv_container .table-container { background: white; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 5px; }
+  #gv_container table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  #gv_container th { background-color: #0d6efd; color: white; text-align: center; padding: 8px 4px; border: 1px solid #dee2e6; vertical-align: middle; font-size: 13px; }
+  #gv_container td { border: 1px solid #999; padding: 0 !important; vertical-align: middle; }
+  #gv_taskTable textarea.form-control { 
+      font-family: 'Times New Roman', Times, serif; font-size: 14px;
+      border: none !important; border-radius: 0; box-shadow: none !important;
+      width: 100%; padding: 4px; margin: 0; background-color: transparent;
+      resize: none; overflow: hidden; min-height: 35px; line-height: 1.3; white-space: pre-wrap; box-sizing: border-box;
+  }
+  #gv_taskTable input.form-control, #gv_taskTable select.form-select {
+      font-family: 'Times New Roman', Times, serif; font-size: 14px;
+      border: none !important; box-shadow: none !important; width: 100%; height: 100%; padding: 4px; background-color: transparent;
+  }
+  #gv_container td.action-cell { text-align: center; padding: 2px !important; background-color: #f8f9fa; }
+  #gv_container .btn-add { margin-top: 5px; font-size: 13px; font-weight: bold; }
+  
+  #gv_loading { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(255,255,255,0.95); display: none; 
+      flex-direction: column; justify-content: center; align-items: center; z-index: 9999; 
+      backdrop-filter: blur(5px);
+  }
+  #gv_loading_msg {
+      margin-top: 20px; font-size: 22px; font-weight: 900; text-align: center; letter-spacing: 1.5px; text-transform: uppercase; 
+      background: linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd); background-size: 300% 300%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 2px 2px 10px rgba(0,0,0,0.1); 
+      animation: gradientMove 3s ease infinite, pulseText 1.5s infinite ease-in-out; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  @keyframes pulseText { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+  .spinner-border-lg { width: 4rem; height: 4rem; border-width: 0.3em; }
+  #gv_container select:disabled { background-color: #e9ecef !important; cursor: not-allowed; color: #6c757d; font-weight: bold; }
+</style>
+
+<div id="gv_container">
+    <div id="gv_loading">
+      <div class="spinner-border text-primary spinner-border-lg" role="status">
+        <span class="visually-hidden">Đang xử lý...</span>
+      </div>
+      <div id="gv_loading_msg">Đang xử lý...</div>
+    </div>
+
+    <div class="header-container">
+      <div class="page-title">PHIẾU GIAO NHIỆM VỤ</div>
+      <div class="filter-group">
+        <select id="gv_yearSelect" class="form-select form-select-lg-custom" style="width: 140px;">
+          <option value="2024-2025">2024-2025</option>
+          <option value="2025-2026" selected>2025-2026</option>
+          <option value="2026-2027">2026-2027</option>
+          <option value="2027-2028">2027-2028</option>
+          <option value="2028-2029">2028-2029</option>
+          <option value="2029-2030">2029-2030</option>
+        </select>
+        
+        <select id="gv_monthSelect" class="form-select form-select-lg-custom" style="width: 120px;">
+          <option value="Tháng 1">Tháng 1</option>
+          <option value="Tháng 2">Tháng 2</option>
+          <option value="Tháng 3">Tháng 3</option>
+          <option value="Tháng 4">Tháng 4</option>
+          <option value="Tháng 5">Tháng 5</option>
+          <option value="Tháng 6">Tháng 6</option>
+          <option value="Tháng 7">Tháng 7</option>
+          <option value="Tháng 8">Tháng 8</option>
+          <option value="Tháng 9">Tháng 9</option>
+          <option value="Tháng 10">Tháng 10</option>
+          <option value="Tháng 11">Tháng 11</option>
+          <option value="Tháng 12">Tháng 12</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table id="gv_taskTable">
+        <thead>
+          <tr>
+            <th style="width: 40px;">Xóa</th>
+            <th style="width: 40px;">STT</th>
+            <th style="width: 35%;">Nội dung công việc</th>
+            <th style="width: 120px;">Thời gian HT</th>
+            <th style="width: 130px;">Loại tiến độ</th>
+            <th style="width: 200px;">Người thực hiện</th>
+            <th style="width: 15%;">Ghi chú</th>
+          </tr>
+        </thead>
+        <tbody id="gv_tableBody"></tbody>
+      </table>
+      <button class="btn btn-success btn-add" onclick="gvThemDong()">+ Thêm dòng mới</button>
+    </div>
+
+    <div class="modal fade" id="gv_deleteModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> CẢNH BÁO NGUY HIỂM</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="gvHuyXoa()"></button>
+          </div>
+          <div class="modal-body text-center p-4">
+            <p class="fs-6 mb-3">Bạn đang chọn chức năng <strong>XÓA TOÀN BỘ DỮ LIỆU CŨ</strong>.</p>
+            <p class="text-danger fw-bold">Hành động này sẽ xóa sạch dữ liệu hiện tại và load lại mẫu từ file gốc.</p>
+            <p>Bạn có chắc chắn muốn thực hiện không?</p>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" onclick="gvHuyXoa()">Hủy bỏ</button>
+            <button type="button" class="btn btn-danger px-4 fw-bold" onclick="gvXndongXoa()">Đồng ý Xóa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="gv_notifyModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+          <div class="modal-header text-white" id="gv_notifyHeader">
+            <h5 class="modal-title fw-bold" id="gv_notifyTitle">THÔNG BÁO</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center p-4">
+            <div id="gv_notifyIcon" class="mb-3" style="font-size: 3rem;"></div>
+            <p class="fs-6 fw-bold" id="gv_notifyMsg">...</p>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Đóng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<script>
+  let dsCanbgv = [];
+  let ddemDong = 1;
+  let tdtaiXoaCho = null;
+  let ptuChoXoa = null;
+
+  setTimeout(function() { gvTaiCanb(); }, 500);
+
+  function gvTbaoNhanh(loai, tb) {
+      const mh = document.getElementById('gv_notifyModal');
+      const hd = document.getElementById('gv_notifyHeader');
+      const td = document.getElementById('gv_notifyTitle');
+      const ct = document.getElementById('gv_notifyMsg');
+      const bg = document.getElementById('gv_notifyIcon');
+      
+      hd.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'text-dark', 'text-white');
+      ct.innerText = tb;
+
+      if (loai === 'tcong') {
+          hd.classList.add('bg-success', 'text-white');
+          td.innerText = "THÀNH CÔNG";
+          bg.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+      } else if (loai === 'loi') {
+          hd.classList.add('bg-danger', 'text-white');
+          td.innerText = "LỖI";
+          bg.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+      } else if (loai === 'cbh') {
+          hd.classList.add('bg-warning', 'text-dark');
+          td.innerText = "CẢNH BÁO";
+          bg.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-warning"></i>';
+          hd.classList.remove('text-white'); 
+          hd.querySelector('.btn-close').classList.remove('btn-close-white');
+      } else {
+          hd.classList.add('bg-primary', 'text-white');
+          td.innerText = "THÔNG BÁO";
+          bg.innerHTML = '<i class="bi bi-info-circle-fill text-primary"></i>';
+      }
+
+      const hm = new bootstrap.Modal(mh);
+      hm.show();
+  }
+
+  function gvDatTai(dt, tbt = null) {
+      const mh = document.getElementById('gv_loading');
+      const ct = document.getElementById('gv_loading_msg');
+      const vq = mh.querySelector('.spinner-border');
+      
+      if (dt) {
+          ct.innerText = tbt || "Đang xử lý...";
+          
+          if (tbt && (tbt.toLowerCase().includes("nhiệm vụ chung") || tbt.toLowerCase().includes("dọn") || tbt.toLowerCase().includes("chuyển"))) {
+              ct.style.backgroundImage = "linear-gradient(45deg, #dc3545, #fd7e14, #ffc107, #dc3545)";
+              vq.className = "spinner-border text-danger spinner-border-lg"; 
+          } else {
+              ct.style.backgroundImage = "linear-gradient(45deg, #0d6efd, #6610f2, #dc3545, #0d6efd)";
+              vq.className = "spinner-border text-primary spinner-border-lg"; 
+          }
+          mh.style.display = 'flex';
+      } else {
+          mh.style.display = 'none';
+      }
+  }
+
+  function gvTaiCanb() {
+    gvDatTai(true, "Đang tải danh sách nhân sự (để giao việc)...");
+    KhachAPI.gvLaydsCanb(function(dl) {
+      dsCanbgv = dl;
+      gvLaydlGoc(); 
+    }, function(l) {
+      gvTbaoNhanh('loi', "Lỗi tải nhân sự: " + l.message);
+      gvDatTai(false);
+    });
+  }
+
+  function gvLaydlGoc() {
+    gvDatTai(true, "✨ Đang cập nhật nhiệm vụ mới ✨");
+    KhachAPI.gvLaydlBdau(gvKhiTaiXong, function(l) {
+      gvTbaoNhanh('loi', "Lỗi tải dữ liệu: " + l.message);
+      gvDatTai(false);
+    });
+  }
+
+  function gvKhiTaiXong(dl) {
+    gvDatTai(false);
+    if(dl.nam) document.getElementById('gv_yearSelect').value = dl.nam;
+    if(dl.thang) document.getElementById('gv_monthSelect').value = dl.thang;
+
+    const bns = dl.dlbang;
+    const tb = document.getElementById('gv_tableBody');
+    tb.innerHTML = ""; 
+    ddemDong = 1; 
+
+    if (bns && bns.length > 0) {
+      bns.forEach(dong => { gvVeDong(dong); });
+      const dcstt = parseInt(bns[bns.length - 1][0]);
+      if (!isNaN(dcstt)) { ddemDong = dcstt + 1; }
+      setTimeout(() => { document.querySelectorAll('#gv_container textarea.form-control').forEach(ptu => gvCoDan(ptu)); }, 200);
+    } else {
+      gvVeDong(); 
+    }
+  }
+
+  function gvVeDong(dong = null) {
+    const tb = document.getElementById('gv_tableBody');
+    const tr = document.createElement('tr');
+    
+    let ngnth = (dong && dong[4]) ? dong[4] : "";
+    let ngnthH = ngnth.toUpperCase();
+    let dcb = (dong && ngnth !== "") ? "disabled" : "";
+
+    let btnxoa = dong 
+        ? `<i class="bi bi-lock-fill text-secondary" title="Đã lưu, không thể xoá"></i>`
+        : `<button class="btn btn-danger btn-sm p-0" style="width:24px; height:24px; line-height:20px;" onclick="gvXoaDong(this)">X</button>`;
+
+    let lchon = `<option value="">--Chọn--</option>`;
+    if (!dcb || ngnthH === 'ALL') {
+      let tchon = (ngnthH === 'ALL') ? "selected" : "";
+      lchon += `<option value="ALL" style="font-weight:bold; color:blue;" ${tchon}>-TOÀN TRƯỜNG-</option>`;
+    }
+    if (!dcb) {
+      lchon += `<option value="DELETE" style="font-weight:bold; color:red;">-CHUYỂN THÁNG MỚI-</option>`;
+    }
+    dsCanbgv.forEach(s => {
+      let chon = (ngnth === s.ttrg) ? "selected" : "";
+      lchon += `<option value="${s.ttrg}" data-name="${s.tenn}" ${chon}>${s.tenn}</option>`;
+    });
+
+    let bstt = ddemDong;
+    let bnd = "", bhc = "", bltd = "", bgc = "";
+
+    if (dong) {
+      bstt = dong[0]; 
+      bnd = dong[1] || "";
+      bhc = dong[2] || "";
+      bltd = dong[3] || "";
+      bgc = dong[5] || ""; 
+      ddemDong = parseInt(bstt) + 1;
+    } else {
+      ddemDong++;
+    }
+
+    const cv = (bltd === "Cho vượt tiến độ") ? "selected" : "";
+
+    tr.innerHTML = `
+      <td class="action-cell">${btnxoa}</td>
+      <td class="text-center"><input type="text" class="form-control text-center stt-cell" value="${bstt}" readonly></td>
+      <td><textarea class="form-control content-cell" placeholder="Nhập nội dung..." oninput="gvCoDan(this)">${bnd}</textarea></td>
+      <td><textarea class="form-control text-center date-cell" placeholder="dd/mm/yyyy" oninput="gvCoDan(this)">${bhc}</textarea></td>
+      <td>
+        <select class="form-select progress-cell">
+          <option value="">--Chọn--</option>
+          <option value="Cho vượt tiến độ" ${cv}>Cho vượt tiến độ</option>
+        </select>
+      </td>
+      <td>
+        <select class="form-select assignee-cell" onchange="gvDoiNgn(this)" ${dcb}>${lchon}</select>
+      </td>
+      <td><textarea class="form-control text-center note-cell" placeholder="Ghi chú" oninput="gvCoDan(this)">${bgc}</textarea></td>
+    `;
+    tb.appendChild(tr);
+  }
+  
+  function gvCoDan(ptu) { ptu.style.height = 'auto'; ptu.style.height = (ptu.scrollHeight) + 'px'; }
+  
+  function gvThemDong() { 
+      const sht = document.querySelectorAll('#gv_tableBody tr').length;
+      ddemDong = sht + 1;
+      gvVeDong(null); 
+  }
+
+  function gvXoaDong(btn) { btn.closest('tr').remove(); gvDanhLaiStt(); }
+  function gvDanhLaiStt() {
+    const sds = document.querySelectorAll('#gv_tableBody tr');
+    let tb = 1;
+    sds.forEach(d => { d.querySelector('.stt-cell').value = tb++; });
+    ddemDong = tb;
+  }
+
+  function gvDoiNgn(ptu) {
+    const dong = ptu.closest('tr');
+    const ndg = dong.querySelector('.content-cell').value.trim();
+    
+    if (!ndg) {
+      gvTbaoNhanh('cbh', "Nội dung công việc không được để trống!");
+      ptu.value = ""; return;
+    }
+
+    const gt = ptu.value;
+    if (!gt) return;
+
+    const gth = gt.toUpperCase();
+    const nm = document.getElementById('gv_yearSelect').value;
+    const th = document.getElementById('gv_monthSelect').value;
+    
+    let tngn = "";
+    if (gth !== 'DELETE' && gth !== 'ALL') {
+      tngn = ptu.options[ptu.selectedIndex].getAttribute('data-name');
+    }
+
+    const nvx = {
+      stt: dong.querySelector('.stt-cell').value,
+      ndung: ndg,
+      hchot: dong.querySelector('.date-cell').value,
+      tdo: dong.querySelector('.progress-cell').value,
+      gchu: dong.querySelector('.note-cell').value,
+      ngnhan: gt, 
+      trangngnhan: gt,
+      tenngnhan: tngn
+    };
+
+    if (gth === 'DELETE') {
+        tdtaiXoaCho = { nam: nm, thang: th, nviec: nvx };
+        ptuChoXoa = ptu;
+        const hmc = new bootstrap.Modal(document.getElementById('gv_deleteModal'));
+        hmc.show();
+        return; 
+    }
+
+    let tbht = "Đang giao việc...";
+    if (gth === 'ALL') {
+        tbht = "🚀 Đang giao cho TOÀN TRƯỜNG 🚀";
+    } else {
+        tbht = "⏳ Đang gửi cho " + tngn + "...";
+    }
+    
+    gvDatTai(true, tbht);
+    gvGoiMayChu(nm, th, nvx, ptu, gth);
+  }
+
+  function gvXndongXoa() {
+      const hmc = document.getElementById('gv_deleteModal');
+      const modal = bootstrap.Modal.getInstance(hmc);
+      modal.hide();
+
+      if (tdtaiXoaCho && ptuChoXoa) {
+          const { nam, thang, nviec } = tdtaiXoaCho;
+          const tbht = `🧹 Đang làm sạch dữ liệu cũ và chuyển sang ${thang}`;
+          gvDatTai(true, tbht);
+          gvGoiMayChu(nam, thang, nviec, ptuChoXoa, 'DELETE');
+      }
+  }
+
+  function gvHuyXoa() {
+      if (ptuChoXoa) { ptuChoXoa.value = ""; }
+      tdtaiXoaCho = null;
+      ptuChoXoa = null;
+  }
+
+  function gvGoiMayChu(n, t, nv, ptu, hth) {
+    KhachAPI.gvXulyNviec({ nam: n, thang: t, nviec: nv }, function(kq) {
+        gvDatTai(false);
+        if (kq && kq.ttai === 'tcong') {
+          ptu.style.backgroundColor = '#d1e7dd'; 
+          ptu.style.borderColor = '#badbcc';
+          ptu.style.fontWeight = 'bold';
+          
+          if (hth === 'DELETE') { 
+              tdtaiXoaCho = null; 
+              ptuChoXoa = null;
+              setTimeout(gvLaydlGoc, 1000); 
+          }
+        } else {
+          gvTbaoNhanh('loi', "Lỗi Server: " + (kq ? kq.tbao : "Unkown error"));
+          ptu.value = "";
+        }
+    }, function(l) {
+        gvDatTai(false);
+        gvTbaoNhanh('loi', "Lỗi kết nối: " + l.message);
+    });
+  }
+</script>
